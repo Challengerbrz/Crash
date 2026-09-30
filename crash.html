@@ -631,6 +631,8 @@
     let contadorFatorDeterminante = 0;
     let contadorFatorContribuinte = 0;
     let contadorFatorAgravante = 0;
+    let contadorFotosComplementares = 0;
+    let contadorFotosComplementaresAtrelado = 0;
 
     const listaOpcoesDeterminantes = [
         "Perda do controle da direção", "Ocupação da faixa contrária", "Ausência de reação do condutor, não materializada em evidências", "Reação ineficaz do condutor, materializada em evidências", "Tráfego no acostamento", "Tráfego pela contramão", "Tráfego entre as faixas", "Presença de pedestre na pista", "Manobra de retorno", "Manobra de conversão", "Manobra de acesso à rodovia", "Manobra de mudança de faixa", "Velocidade incompatível, sendo necessária a comprovação (cálculo de velocidade, cronotacógrafo atendendo todos os requisitos legais, entre outros)", "Presença de animais na pista", "Acostamento em desnível", "Buraco na via", "Objeto estático sobre o leito carroçável", "Drenagem ineficiente", "Superelevação negativa", "Restrição de visibilidade (descrever a restrição)", "Demais problemas viário-ambientais (descrever o problema encontrado)", "Alteração veicular proibida (descrever a alteração)", "Carga excessiva e/ou mal acondicionada", "Defeito na suspensão", "Avarias e/ou desgaste excessivo no pneu", "Defeito no sistema de freios", "Demais falhas mecânicas ou elétricas (descrever a falha)", "Conclui-se pela impossibilidade técnica de apontar o fator determinante do sinistro, haja vista que os elementos materiais coligidos, examinados e preservados mostraram-se insuficientes para fundamentar uma convicção pericial segura."
@@ -644,7 +646,6 @@
         "Deixar de usar cinto de segurança", "Deixar de usar capacete", "Criança sem dispositivo de retenção", "Velocidade incompatível, sendo necessária a comprovação (cálculo de velocidade, cronotacógrafo atendendo todos os requisitos legais, entre outros)", "Acostamento em desnível", "Desnível em relação ao final do leito carroçável e a faixa de domínio adjacente", "Falta de elemento de contenção que evite a saída do leito carroçável", "Pista esburacada", "Objeto estático sobre o leito carroçável", "Objeto estático na faixa de domínio adjacente", "Pista em desnível", "Carga excessiva e/ou mal acondicionada", "Carga no compartimento de passageiros"
     ];
 
-    // Função auxiliar para retornar as opções dinâmicas customizadas com base nas informações gerais
     function getListaOpcoesDinamica() {
         const rodoviaVal = document.getElementById('campo-rodovia').value.trim() || 'XXX';
         const crescenteVal = document.getElementById('campo-cidade-crescente').value.trim() || 'cidade x';
@@ -654,14 +655,14 @@
             `Veículo trafegava pela rodovia BR ${rodoviaVal} na faixa de trânsito sentido ${crescenteVal} - ${decrescenteVal}, enquanto veículo não foi possível determinar o seu sentido de direção, por ausência de evidências materiais`,
             `Veículo trafegava pela rodovia BR ${rodoviaVal} na faixa de trânsito sentido ${crescenteVal}, enquanto veículo trafegava pela mesma rodovia no mesmo sentido, logo atrás`,
             `Veículo trafegava pela rodovia BR ${rodoviaVal} na faixa de trânsito sentido ${crescenteVal} - ${decrescenteVal}, enquanto veículo trafegava pela mesma rodovia na faixa de trânsito sentido ${decrescenteVal} - ${crescenteVal}`,
-            `ocorreu a perda do controle da direção de Veículo`,
+            `Ocorreu a perda do controle da direção de Veículo na faixa de trânsito sentido ${crescenteVal} - ${decrescenteVal}`,
             `Veículo ocupou a faixa de trânsito sentido ${crescenteVal} - ${decrescenteVal}`,
             `Veículo realizou manobra de mudança de faixa`,
             `Veículo realizou manobra de conversão`,
             `Veículo realizou manobra de retorno`,
-            `Veículo colidiu em Veículo`,
+            `Ocorreu a colisão entre Veículos `,
             `Veículo saiu do leito carroçável`,
-            `Veículo acionou o sistema ed frenagem`,
+            `Veículo acionou o sistema de frenagem`,
             `Pedestre ocupou a faixa de trânsito sentido ${crescenteVal} - ${decrescenteVal}`,
             `Ocorreu a queda de ocupante de veículo na faixa de trânsito sentido ${crescenteVal} - ${decrescenteVal}`,
             `Ocorreu a queda de ocupante de veículo em área lindeira adjacente a faixa de trânsito sentido ${crescenteVal} - ${decrescenteVal}`,
@@ -696,7 +697,6 @@
 
         let textoMomento = val;
         
-        // Substituição para frases com "enquanto veículo"
         if (textoMomento.includes("enquanto veículo")) {
             if (veiculosRelacionados.length >= 2) {
                 textoMomento = textoMomento.replace("Veículo", veiculosRelacionados[0]);
@@ -704,6 +704,18 @@
             } else if (veiculosRelacionados.length === 1) {
                 textoMomento = textoMomento.replace("Veículo", veiculosRelacionados[0]);
                 textoMomento = textoMomento.replace("veículo", veiculosRelacionados[0]);
+            }
+        } else if (textoMomento.includes("entre Veículos")) {
+            if (veiculosRelacionados.length > 0) {
+                if (veiculosRelacionados.length === 1) {
+                    textoMomento = textoMomento.replace("entre Veículos", `entre o ${veiculosRelacionados[0]} e outro elemento`);
+                } else if (veiculosRelacionados.length === 2) {
+                    textoMomento = textoMomento.replace("entre Veículos", `entre os veículos ${veiculosRelacionados[0]} e ${veiculosRelacionados[1]}`);
+                } else {
+                    const ultimo = veiculosRelacionados.pop();
+                    const listaStr = `${veiculosRelacionados.join(', ')} e ${ultimo}`;
+                    textoMomento = textoMomento.replace("entre Veículos", `entre os veículos ${listaStr}`);
+                }
             }
         } else {
             if (veiculosRelacionados.length > 0) {
@@ -719,7 +731,6 @@
             }
         }
 
-        // Substituição inteligente de "VX" com base nos veículos selecionados
         if (textoMomento.includes("VX")) {
             if (veiculosRelacionados.length > 0) {
                 let contadorV = 0;
@@ -735,7 +746,6 @@
     }
 
     function atualizarNarrativaIntro() {
-        
         const dataInput = document.getElementById('campo-data').value;
         let dataFormatada = 'xxx de xxx de xxx';
 
@@ -823,13 +833,11 @@
                         if (selComp && selComp.value.trim()) {
                             let compVal = selComp.value.trim();
                             
-                            // Recolhe os veículos selecionados neste momento
                             let veiculosRelacionados = [];
                             checkboxesVeiculos.forEach(chk => {
                                 veiculosRelacionados.push(chk.getAttribute('data-rotulo'));
                             });
 
-                            // Substituição independente de VX por cada complemento conforme sua posição (compIdx)
                             if (compVal.includes("VX")) {
                                 if (veiculosRelacionados.length > 0) {
                                     let rotuloSubst = veiculosRelacionados[compIdx] || veiculosRelacionados[0];
@@ -955,6 +963,18 @@
             const encVeiculoVal = b.querySelector('.campo-encaminhamento-veiculo').value;
             let encVeiculoStr = encVeiculoVal ? `Encaminhamento do veículo: ${encVeiculoVal}.` : 'Sem encaminhamento de veículo registrado.';
 
+            let nfStr = '';
+            const chkNF = b.querySelector('.chk-nota-fiscal');
+            if (chkNF && chkNF.checked) {
+                const numNF = b.querySelector('.campo-nf-numero')?.value || 'XXX';
+                const dataNF = b.querySelector('.campo-nf-data')?.value || 'XXX';
+                const origemNF = b.querySelector('.campo-nf-origem')?.value || 'XXX';
+                const destinoNF = b.querySelector('.campo-nf-destino')?.value || 'XXX';
+                const serieNF = b.querySelector('.campo-nf-serie')?.value || 'XXX';
+                const cargaNF = b.querySelector('.campo-nf-carga')?.value || 'XXX';
+                nfStr = `Nota Fiscal: ${numNF}, Data: ${dataNF}, Origem: ${origemNF}, Destino: ${destinoNF}, Nº Série: ${serieNF}, Carga Transportada: ${cargaNF}.`;
+            }
+
             let pessoasStr = [];
             b.querySelectorAll('.item-pessoa-veiculo').forEach(p => {
                 const nomeInput = p.querySelector('.campo-nome-pessoa').value.trim();
@@ -995,7 +1015,8 @@
             });
 
             let detalheP = pessoasStr.length > 0 ? `\nPessoas:\n` + pessoasStr.join('\n') : '';
-            infoDetalhesVeiculosPessoas.push(`- Veículo ${vNum} (Velocidade regulamentar para ${vNum}: ${vx}).\n  • ${encVeiculoStr}${detalheP}`);
+            let detalheNF = nfStr ? `\n  • ${nfStr}` : '';
+            infoDetalhesVeiculosPessoas.push(`- Veículo ${vNum} (Velocidade regulamentar para ${vNum}: ${vx}).\n  • ${encVeiculoStr}${detalheNF}${detalheP}`);
         });
 
         const textoDetalhesAdicionais = `OBSERVAÇÕES COMPLEMENTARES:\n` +
@@ -1544,11 +1565,37 @@
 
                 <li>
                     <label style="font-weight: 600; cursor: pointer; color: #475569;">
-                        <input type="checkbox" class="chk-nota-fiscal" onchange="toggleAreaNotaFiscal(this); salvarDadosOffline();" style="transform: scale(1.2); margin-right: 6px;">
+                        <input type="checkbox" class="chk-nota-fiscal" onchange="toggleAreaNotaFiscal(this); atualizarNarrativaIntro(); salvarDadosOffline();" style="transform: scale(1.2); margin-right: 6px;">
                         Nota Fiscal?
                     </label>
 
                     <div class="area-nota-fiscal">
+                        <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px;">
+                            <div>
+                                <span style="font-size: 0.75rem; font-weight: bold;">NOTA FISCAL (Nº):</span>
+                                <input type="text" class="campo-nf-numero" placeholder="Ex: 123456" oninput="atualizarNarrativaIntro(); salvarDadosOffline();">
+                            </div>
+                            <div>
+                                <span style="font-size: 0.75rem; font-weight: bold;">DATA:</span>
+                                <input type="text" class="campo-nf-data" placeholder="Ex: 30/09/2026" oninput="atualizarNarrativaIntro(); salvarDadosOffline();">
+                            </div>
+                            <div>
+                                <span style="font-size: 0.75rem; font-weight: bold;">ORIGEM:</span>
+                                <input type="text" class="campo-nf-origem" placeholder="Ex: Curitiba/PR" oninput="atualizarNarrativaIntro(); salvarDadosOffline();">
+                            </div>
+                            <div>
+                                <span style="font-size: 0.75rem; font-weight: bold;">DESTINO:</span>
+                                <input type="text" class="campo-nf-destino" placeholder="Ex: Cascavel/PR" oninput="atualizarNarrativaIntro(); salvarDadosOffline();">
+                            </div>
+                            <div>
+                                <span style="font-size: 0.75rem; font-weight: bold;">Nº SÉRIE:</span>
+                                <input type="text" class="campo-nf-serie" placeholder="Ex: 1" oninput="atualizarNarrativaIntro(); salvarDadosOffline();">
+                            </div>
+                            <div>
+                                <span style="font-size: 0.75rem; font-weight: bold;">CARGA TRANSPORTADA:</span>
+                                <input type="text" class="campo-nf-carga" placeholder="Ex: Soja a granel" oninput="atualizarNarrativaIntro(); salvarDadosOffline();">
+                            </div>
+                        </div>
                         <div>
                             <span style="font-size: 0.85rem; font-weight: bold; display: block;">FOTO DA NOTA FISCAL</span>
                             <input type="file" class="campo-foto foto-nota-fiscal" accept="image/*" onchange="previewFoto(this)">
@@ -1578,7 +1625,7 @@
                 </li>
 
                 <li>
-                    <span style="font-weight: 600; display: block; margin-top: 8px; color: #475569;">FOTOS DO VEÍCULO (ATÉ 4 FOTOS)</span>
+                    <span style="font-weight: 600; display: block; margin-top: 8px; color: #475569;">FOTOS DO VEÍCULO</span>
                     <div class="grid-fotos">
                         <div class="item-foto">
                             <span style="font-size: 0.8rem;">Foto 1</span>
@@ -1601,6 +1648,12 @@
                             <img class="preview-img" alt="Preview 4">
                         </div>
                     </div>
+
+                    <!-- Container para fotos complementares do veículo -->
+                    <div class="container-fotos-complementares" style="display: flex; flex-direction: column; gap: 10px; margin-top: 10px;"></div>
+                    <button type="button" class="btn-add" style="margin-top: 8px; background-color: var(--secondary-color); font-size: 0.85rem;" onclick="adicionarFotoComplementarVeiculo(this); salvarDadosOffline();">
+                        + Adicionar Foto Complementar
+                    </button>
                 </li>
                 
                 <li class="area-atrelado-check" style="display: none;">
@@ -1636,6 +1689,48 @@
 
         renumerarVeiculos();
         atualizarNarrativaIntro();
+    }
+
+    function adicionarFotoComplementarVeiculo(btn) {
+        contadorFotosComplementares++;
+        const blocoVeiculo = btn.closest('.bloco-veiculo');
+        const containerComps = blocoVeiculo.querySelector('.container-fotos-complementares');
+
+        const divFoto = document.createElement('div');
+        divFoto.className = 'item-foto';
+        divFoto.id = `foto-comp-${contadorFotosComplementares}`;
+
+        divFoto.innerHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-size: 0.8rem; font-weight: bold;">Foto Complementar</span>
+                <button type="button" class="btn-remover" style="padding: 4px 8px; font-size: 0.7rem;" onclick="this.closest('.item-foto').remove(); salvarDadosOffline();">Remover</button>
+            </div>
+            <input type="file" class="campo-foto" accept="image/*" onchange="previewFoto(this)">
+            <img class="preview-img" alt="Preview Complementar">
+        `;
+
+        containerComps.appendChild(divFoto);
+    }
+
+    function adicionarFotoComplementarAtrelado(btn) {
+        contadorFotosComplementaresAtrelado++;
+        const blocoAtrelado = btn.closest('.bloco-atrelado-item');
+        const containerComps = blocoAtrelado.querySelector('.container-fotos-complementares-atrelado');
+
+        const divFoto = document.createElement('div');
+        divFoto.className = 'item-foto';
+        divFoto.id = `foto-comp-atrelado-${contadorFotosComplementaresAtrelado}`;
+
+        divFoto.innerHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-size: 0.8rem; font-weight: bold;">Foto Complementar (Atrelado)</span>
+                <button type="button" class="btn-remover" style="padding: 4px 8px; font-size: 0.7rem;" onclick="this.closest('.item-foto').remove(); salvarDadosOffline();">Remover</button>
+            </div>
+            <input type="file" class="campo-foto" accept="image/*" onchange="previewFoto(this)">
+            <img class="preview-img" alt="Preview Complementar Atrelado">
+        `;
+
+        containerComps.appendChild(divFoto);
     }
 
     function removerVeiculoElemento(id) {
@@ -1725,7 +1820,7 @@
                     <input type="text" class="campo-modelo-atrelado" placeholder="Ex: Randon Basculante" oninput="atualizarNarrativaIntro(); salvarDadosOffline();">
                 </li>
                 <li>
-                    <span style="font-weight: 600; display: block; margin-top: 8px; color: #475569;">FOTOS DO ATRELADO (4 FOTOS)</span>
+                    <span style="font-weight: 600; display: block; margin-top: 8px; color: #475569;">FOTOS DO ATRELADO</span>
                     <div class="grid-fotos">
                         <div class="item-foto">
                             <span style="font-size: 0.8rem;">Foto 1</span>
@@ -1748,6 +1843,12 @@
                             <img class="preview-img" alt="Preview Atrelado 4">
                         </div>
                     </div>
+
+                    <!-- Container para fotos complementares do atrelado -->
+                    <div class="container-fotos-complementares-atrelado" style="display: flex; flex-direction: column; gap: 10px; margin-top: 10px;"></div>
+                    <button type="button" class="btn-add" style="margin-top: 8px; background-color: #15803d; font-size: 0.85rem;" onclick="adicionarFotoComplementarAtrelado(this); salvarDadosOffline();">
+                        + Adicionar Foto Complementar (Atrelado)
+                    </button>
                 </li>
             </ul>
         `;
@@ -1954,11 +2055,24 @@
 
     document.getElementById('btnLocalizacao').addEventListener('click', () => {
         const resultado = document.getElementById('resultado');
+        
+        if (location.protocol !== 'https:' && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
+            resultado.innerHTML = '<span style="color: red;">Aviso: A geolocalização no celular exige conexão segura (HTTPS). Se estiver abrindo o arquivo direto do celular (file://), o navegador pode bloquear.</span>';
+        }
+
         if (!navigator.geolocation) {
-            resultado.textContent = 'Geolocalização não suportada.';
+            resultado.textContent = 'Geolocalização não suportada por este navegador.';
             return;
         }
+
         resultado.textContent = 'Buscando coordenadas GPS...';
+        
+        const opcoesGPS = {
+            enableHighAccuracy: true,
+            timeout: 15000,
+            maximumAge: 0
+        };
+
         navigator.geolocation.getCurrentPosition(
             (pos) => {
                 latAtual = pos.coords.latitude;
@@ -1966,7 +2080,22 @@
                 resultado.innerHTML = `<strong>Latitude:</strong> ${latAtual} <br><strong>Longitude:</strong> ${lngAtual}`;
                 salvarDadosOffline();
             },
-            () => { resultado.textContent = 'Erro ao obter localização. Verifique o GPS.'; }
+            (error) => {
+                let mensagemErro = 'Erro ao obter localização.';
+                switch(error.code) {
+                    case error.PERMISSION_DENIED:
+                        mensagemErro = 'Permissão de localização negada pelo usuário.';
+                        break;
+                    case error.POSITION_UNAVAILABLE:
+                        mensagemErro = 'Informações de localização indisponíveis. Verifique se o GPS está ligado.';
+                        break;
+                    case error.TIMEOUT:
+                        mensagemErro = 'A requisição para obter a localização expirou (Timeout).';
+                        break;
+                }
+                resultado.innerHTML = `<span style="color: red;">${mensagemErro}</span>`;
+            },
+            opcoesGPS
         );
     });
 
@@ -2030,58 +2159,55 @@
             
             atualizarSinalizacaoHorizontal();
             document.getElementById('campo-sinalizacao-horizontal').value = dados.gerais.sinalizacaoHorizontal || '';
-            
             document.getElementById('campo-vel-r19').value = dados.gerais.velR19 || '';
             document.getElementById('campo-km-r19').value = dados.gerais.kmR19 || '';
             document.getElementById('campo-sentido-r19').value = dados.gerais.sentidoR19 || '';
             
-            const chkReq = document.getElementById('chk-possui-requerimento');
-            chkReq.checked = dados.gerais.possuiRequerimento || false;
-            if(chkReq.checked) document.getElementById('area-requerimentos').style.display = 'block';
+            if (dados.gerais.possuiRequerimento) {
+                document.getElementById('chk-possui-requerimento').checked = true;
+                toggleAreaRequerimentos(document.getElementById('chk-possui-requerimento'));
+            }
 
-            latAtual = dados.gerais.lat || "Não informada";
-            lngAtual = dados.gerais.lng || "Não informada";
-            if(latAtual !== "Não informada") {
+            if (dados.gerais.lat) latAtual = dados.gerais.lat;
+            if (dados.gerais.lng) lngAtual = dados.gerais.lng;
+            if (latAtual !== "Não informada") {
                 document.getElementById('resultado').innerHTML = `<strong>Latitude:</strong> ${latAtual} <br><strong>Longitude:</strong> ${lngAtual}`;
             }
 
-            document.getElementById('chk-obito-local-narrativa').checked = dados.narrativaSecao.obitoLocal || false;
-            if(dados.narrativaSecao.obitoLocal) document.getElementById('area-amarracao-narrativa').style.display = 'block';
+            if (dados.narrativaSecao) {
+                document.getElementById('chk-obito-local-narrativa').checked = dados.narrativaSecao.obitoLocal || false;
+                toggleAreaAmarracaoNarrativa(document.getElementById('chk-obito-local-narrativa'));
+                document.getElementById('campo-preservacao-local').value = dados.narrativaSecao.preservacao || '';
+                document.getElementById('campo-tipo-sinistro').value = dados.narrativaSecao.tipoSinistro || '';
+                document.getElementById('campo-narrativa').value = dados.narrativaSecao.textoNarrativa || '';
+            }
 
-            document.getElementById('campo-preservacao-local').value = dados.narrativaSecao.preservacao || '';
-            document.getElementById('campo-tipo-sinistro').value = dados.narrativaSecao.tipoSinistro || '';
-            document.getElementById('campo-narrativa').value = dados.narrativaSecao.textoNarrativa || '';
-
-            if (dados.htmlEstado.containerVeiculos) document.getElementById('container-veiculos').innerHTML = dados.htmlEstado.containerVeiculos;
-            if (dados.htmlEstado.containerParticipacoes) document.getElementById('container-participacoes').innerHTML = dados.htmlEstado.containerParticipacoes;
-            if (dados.htmlEstado.containerRequerimentos) document.getElementById('container-requerimentos').innerHTML = dados.htmlEstado.containerRequerimentos;
-            if (dados.htmlEstado.containerDinamica) document.getElementById('container-dinamica').innerHTML = dados.htmlEstado.containerDinamica;
-            if (dados.htmlEstado.containerFatorDeterminante) document.getElementById('container-fator-determinante').innerHTML = dados.htmlEstado.containerFatorDeterminante;
-            if (dados.htmlEstado.containerFatorContribuinte) document.getElementById('container-fator-contribuinte').innerHTML = dados.htmlEstado.containerFatorContribuinte;
-            if (dados.htmlEstado.containerFatorAgravante) document.getElementById('container-fator-agravante').innerHTML = dados.htmlEstado.containerFatorAgravante;
-            if (dados.htmlEstado.corpoTabelaAmarracao) document.getElementById('corpo-tabela-amarracao-narrativa').innerHTML = dados.htmlEstado.corpoTabelaAmarracao;
-
-            atualizarNarrativaIntro();
+            if (dados.htmlEstado) {
+                if (dados.htmlEstado.containerVeiculos) document.getElementById('container-veiculos').innerHTML = dados.htmlEstado.containerVeiculos;
+                if (dados.htmlEstado.containerParticipacoes) document.getElementById('container-participacoes').innerHTML = dados.htmlEstado.containerParticipacoes;
+                if (dados.htmlEstado.containerRequerimentos) document.getElementById('container-requerimentos').innerHTML = dados.htmlEstado.containerRequerimentos;
+                if (dados.htmlEstado.containerDinamica) document.getElementById('container-dinamica').innerHTML = dados.htmlEstado.containerDinamica;
+                if (dados.htmlEstado.containerFatorDeterminante) document.getElementById('container-fator-determinante').innerHTML = dados.htmlEstado.containerFatorDeterminante;
+                if (dados.htmlEstado.containerFatorContribuinte) document.getElementById('container-fator-contribuinte').innerHTML = dados.htmlEstado.containerFatorContribuinte;
+                if (dados.htmlEstado.containerFatorAgravante) document.getElementById('container-fator-agravante').innerHTML = dados.htmlEstado.containerFatorAgravante;
+                if (dados.htmlEstado.corpoTabelaAmarracao) document.getElementById('corpo-tabela-amarracao-narrativa').innerHTML = dados.htmlEstado.corpoTabelaAmarracao;
+            }
         } catch (e) {
-            console.error("Erro ao carregar os dados salvos offline:", e);
+            console.error("Erro ao carregar dados offline", e);
         }
     }
 
     function exportarBackupJSON() {
-        salvarDadosOffline();
         const salvo = localStorage.getItem('crash_ocorrencia_offline');
         if (!salvo) {
-            alert("Não há dados preenchidos para exportar.");
+            alert('Nenhum dado salvo para exportar.');
             return;
         }
-
-        const blob = new Blob([salvo], { type: "application/json" });
+        const blob = new Blob([salvo], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
-        
-        const dataStr = document.getElementById('campo-data').value || 'backup';
         a.href = url;
-        a.download = `backup-ocorrencia-${dataStr}.json`;
+        a.download = `backup-crash-${Date.now()}.json`;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
@@ -2089,254 +2215,187 @@
     }
 
     function importarBackupJSON(input) {
-        const arquivo = input.files[0];
-        if (!arquivo) return;
-
+        if (!input.files || !input.files[0]) return;
         const reader = new FileReader();
         reader.onload = function(e) {
             try {
-                JSON.parse(e.target.result);
                 localStorage.setItem('crash_ocorrencia_offline', e.target.result);
                 carregarDadosOffline();
-                alert("Backup restaurado com sucesso!");
+                alert('Backup carregado com sucesso!');
             } catch (err) {
-                alert("Erro ao ler o arquivo de backup. Certifique-se de que é um JSON válido.");
+                alert('Erro ao importar arquivo JSON.');
             }
         };
-        reader.readAsText(arquivo);
-        input.value = '';
+        reader.readAsText(input.files[0]);
     }
 
     function limparDadosLocalStorage() {
-        if (confirm("Tem certeza que deseja limpar todos os dados salvos e iniciar um novo relatório?")) {
+        if (confirm('Tem certeza que deseja limpar todos os dados e iniciar um novo relatório?')) {
             localStorage.removeItem('crash_ocorrencia_offline');
             location.reload();
         }
     }
 
-    async function gerarPDFTexto() {
-        try {
-            const jsPDFLib = window.jspdf ? window.jspdf.jsPDF : null;
-            if (!jsPDFLib) {
-                alert("Erro: A biblioteca jsPDF não foi carregada corretamente. Verifique sua conexão com a internet.");
-                return;
-            }
+    // NOVA FUNÇÃO GERAR PDF CAPTURANDO TODAS AS ABAS NA ORDEM CORRETA
+    function gerarPDFTexto() {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF({
+            unit: 'mm',
+            format: 'a4'
+        });
 
-            const doc = new jsPDFLib({
-                orientation: 'portrait',
-                unit: 'mm',
-                format: 'a4'
-            });
+        let y = 15;
+        const pageHeight = 280;
+        const margin = 15;
+        const maxWidth = 180;
 
-            const margemEsquerda = 15;
-            const larguraPagina = 180;
-            let y = 20;
-            const alturaPaginaLimite = 280;
-
-            function checkPageBreak(addedHeight) {
-                if (y + addedHeight > alturaPaginaLimite) {
+        function addText(text, fontSize = 10, isBold = false, color = [51, 65, 85]) {
+            doc.setFont("helvetica", isBold ? "bold" : "normal");
+            doc.setFontSize(fontSize);
+            doc.setTextColor(color[0], color[1], color[2]);
+            
+            const lines = doc.splitTextToSize(text, maxWidth);
+            for (let i = 0; i < lines.length; i++) {
+                if (y > pageHeight) {
                     doc.addPage();
-                    y = 20;
+                    y = 15;
                 }
+                doc.text(lines[i], margin, y);
+                y += fontSize * 0.45;
             }
-
-            // Cabeçalho Principal do Documento
-            doc.setFont("helvetica", "bold");
-            doc.setFontSize(14);
-            doc.setTextColor(30, 58, 138);
-            doc.text("RELATÓRIO DE SINISTRO DE TRÂNSITO - CRASH", margemEsquerda, y);
-            y += 6;
-            doc.setLineWidth(0.4);
-            doc.line(margemEsquerda, y, margemEsquerda + larguraPagina, y);
-            y += 10;
-
-            // ==========================================
-            // 1. INFORMAÇÕES GERAIS
-            // ==========================================
-            checkPageBreak(15);
-            doc.setFont("helvetica", "bold");
-            doc.setFontSize(11);
-            doc.setTextColor(30, 58, 138);
-            doc.text("1. INFORMAÇÕES GERAIS", margemEsquerda, y);
-            y += 6;
-
-            doc.setFont("helvetica", "normal");
-            doc.setFontSize(10);
-            doc.setTextColor(51, 65, 85);
-
-            const data = document.getElementById('campo-data').value || 'Não informada';
-            const hora = document.getElementById('campo-hora').value || 'Não informado';
-            const cidade = document.getElementById('campo-cidade').value || 'Não informado';
-            const rodovia = document.getElementById('campo-rodovia').value || 'Não informada';
-            const kmVal = document.getElementById('campo-km').value || 'Não informado';
-            const cidadeCrescente = document.getElementById('campo-cidade-crescente').value || 'Não informado';
-            const cidadeDecrescente = document.getElementById('campo-cidade-decrescente').value || 'Não informado';
-            const sinalizacao = document.getElementById('campo-sinalizacao-horizontal').value || 'Não informada';
-            const velR19 = document.getElementById('campo-vel-r19').value;
-            const kmR19 = document.getElementById('campo-km-r19').value;
-            const sentidoR19 = document.getElementById('campo-sentido-r19').value;
-
-            let infosGerais = [
-                `Data e Horário: ${data} às ${hora}`,
-                `Localização: Município de ${cidade} | Rodovia BR-${rodovia} | KM ${kmVal}`,
-                `Sentidos: Crescente (${cidadeCrescente}) | Decrescente (${cidadeDecrescente})`,
-                `Sinalização Horizontal: ${sinalizacao}`,
-                `Coordenadas GPS: Latitude: ${latAtual} | Longitude: ${lngAtual}`
-            ];
-
-            if (velR19 || kmR19 || sentidoR19) {
-                infosGerais.push(`Placa R19: ${velR19 || 'xx'} km/h no km ${kmR19 || 'xx'} (${sentidoR19 || 'xx'})`);
-            }
-
-            infosGerais.forEach(info => {
-                checkPageBreak(6);
-                doc.text(`• ${info}`, margemEsquerda, y);
-                y += 6;
-            });
-
-            // Requerimentos
-            const chkReq = document.getElementById('chk-possui-requerimento');
-            if (chkReq && chkReq.checked) {
-                checkPageBreak(8);
-                y += 2;
-                doc.setFont("helvetica", "bold");
-                doc.text("Requerimentos do Sinistro:", margemEsquerda, y);
-                y += 6;
-                doc.setFont("helvetica", "normal");
-                document.querySelectorAll('.bloco-requerimento').forEach(b => {
-                    const tipoReq = b.querySelector('.campo-tipo-requerimento')?.value;
-                    if (tipoReq) {
-                        checkPageBreak(6);
-                        doc.text(`- ${tipoReq}`, margemEsquerda + 5, y);
-                        y += 6;
-                    }
-                });
-            }
-
-            // Participação Externa
-            const participacoes = document.querySelectorAll('.bloco-participacao');
-            if (participacoes.length > 0) {
-                checkPageBreak(8);
-                y += 2;
-                doc.setFont("helvetica", "bold");
-                doc.text("Participação Externa:", margemEsquerda, y);
-                y += 6;
-                doc.setFont("helvetica", "normal");
-                participacoes.forEach(b => {
-                    const tipoPart = b.querySelector('.campo-tipo-participacao')?.value;
-                    const obsPart = b.querySelector('.campo-obs-participacao')?.value;
-                    if (tipoPart) {
-                        checkPageBreak(6);
-                        doc.text(`- Órgão: ${tipoPart}${obsPart ? ` (${obsPart})` : ''}`, margemEsquerda + 5, y);
-                        y += 6;
-                    }
-                });
-            }
-
-            y += 6;
-
-            // ==========================================
-            // 2. VEÍCULOS E PESSOAS ENVOLVIDAS
-            // ==========================================
-            checkPageBreak(15);
-            doc.setFont("helvetica", "bold");
-            doc.setFontSize(11);
-            doc.setTextColor(30, 58, 138);
-            doc.text("2. VEÍCULOS E PESSOAS", margemEsquerda, y);
-            y += 6;
-
-            const blocosVeiculos = document.querySelectorAll('.bloco-veiculo');
-            if (blocosVeiculos.length === 0) {
-                checkPageBreak(6);
-                doc.setFont("helvetica", "normal");
-                doc.text("Nenhum veículo cadastrado.", margemEsquerda, y);
-                y += 6;
-            } else {
-                blocosVeiculos.forEach((b, idx) => {
-                    const vNum = idx + 1;
-                    const tipoV = b.querySelector('.campo-tipo-veiculo')?.value || 'Não informado';
-                    const modeloV = b.querySelector('.campo-modelo-veiculo')?.value || 'Não informado';
-                    const velV = b.querySelector('.campo-velocidade-veiculo')?.value || 'Não informada';
-                    const encV = b.querySelector('.campo-encaminhamento-veiculo')?.value || 'Não informado';
-
-                    checkPageBreak(15);
-                    doc.setFont("helvetica", "bold");
-                    doc.setFontSize(10);
-                    doc.setTextColor(15, 23, 42);
-                    doc.text(`Veículo ${vNum}: ${tipoV} - ${modeloV}`, margemEsquerda, y);
-                    y += 6;
-
-                    doc.setFont("helvetica", "normal");
-                    doc.setFontSize(10);
-                    doc.setTextColor(51, 65, 85);
-                    
-                    checkPageBreak(6);
-                    doc.text(`• Velocidade Regulamentar: ${velV}`, margemEsquerda + 5, y);
-                    y += 6;
-                    
-                    checkPageBreak(6);
-                    doc.text(`• Encaminhamento do Veículo: ${encV}`, margemEsquerda + 5, y);
-                    y += 6;
-
-                    // Veículos Atrelados
-                    const chkAtrelado = b.querySelector('.chk-atrelado');
-                    if (chkAtrelado && chkAtrelado.checked) {
-                        b.querySelectorAll('.bloco-atrelado-item').forEach(atrelado => {
-                            const tipoA = atrelado.querySelector('.campo-tipo-atrelado')?.value || 'Atrelado';
-                            const modeloA = atrelado.querySelector('.campo-modelo-atrelado')?.value || '';
-                            checkPageBreak(6);
-                            doc.text(`• Atrelado: ${tipoA} ${modeloA}`, margemEsquerda + 5, y);
-                            y += 6;
-                        });
-                    }
-
-                    // Pessoas do Veículo
-                    b.querySelectorAll('.item-pessoa-veiculo').forEach(p => {
-                        const nomeP = p.querySelector('.campo-nome-pessoa')?.value.trim() || 'Pessoa não identificada';
-                        const papelP = p.querySelector('.campo-papel-pessoa')?.value || 'Envolvido';
-                        const morreLocal = p.querySelector('.chk-morte')?.checked ? ' (Óbito no local)' : '';
-                        const lesao = p.querySelector('.chk-lesao')?.checked ? ' (Com lesão)' : '';
-
-                        checkPageBreak(6);
-                        doc.text(`• ${papelP}: ${nomeP}${morreLocal}${lesao}`, margemEsquerda + 5, y);
-                        y += 6;
-                    });
-                });
-            }
-
-            y += 6;
-
-            // ==========================================
-            // 3. NARRATIVA DOS FATOS
-            // ==========================================
-            checkPageBreak(15);
-            doc.setFont("helvetica", "bold");
-            doc.setFontSize(11);
-            doc.setTextColor(30, 58, 138);
-            doc.text("3. NARRATIVA E CONCLUSÃO", margemEsquerda, y);
-            y += 6;
-
-            doc.setFont("helvetica", "normal");
-            doc.setFontSize(10);
-            doc.setTextColor(51, 65, 85);
-
-            const textoNarrativaCompleto = document.getElementById('campo-narrativa').value || 'Narrativa não preenchida.';
-            const linhasNarrativa = doc.splitTextToSize(textoNarrativaCompleto, larguraPagina);
-
-            linhasNarrativa.forEach(linha => {
-                checkPageBreak(6);
-                doc.text(linha, margemEsquerda, y);
-                y += 5;
-            });
-
-            // Salvar PDF gerado
-            const nomeArquivoData = document.getElementById('campo-data').value || 'relatorio-crash';
-            doc.save(`relatorio-${nomeArquivoData}.pdf`);
-
-        } catch (err) {
-            console.error("Erro ao gerar PDF:", err);
-            alert("Ocorreu um erro ao gerar o PDF. Verifique o console.");
+            y += 2;
         }
+
+        // Título Principal
+        addText("RELATÓRIO DE SINISTRO DE TRÂNSITO - CRASH", 14, true, [30, 58, 138]);
+        y += 5;
+
+        // 1. INFORMAÇÕES GERAIS
+        addText("1. INFORMAÇÕES GERAIS", 12, true, [2, 132, 199]);
+        const data = document.getElementById('campo-data').value || 'Não informada';
+        const hora = document.getElementById('campo-hora').value || 'Não informada';
+        const cidade = document.getElementById('campo-cidade').value || 'Não informada';
+        const rodovia = document.getElementById('campo-rodovia').value || 'Não informada';
+        const km = document.getElementById('campo-km').value || 'Não informado';
+        const cidadeCrescente = document.getElementById('campo-cidade-crescente').value || 'Não informada';
+        const cidadeDecrescente = document.getElementById('campo-cidade-decrescente').value || 'Não informada';
+        const sinalizacao = document.getElementById('campo-sinalizacao-horizontal').value || 'Não informada';
+        const velR19 = document.getElementById('campo-vel-r19').value || 'Não informada';
+        const kmR19 = document.getElementById('campo-km-r19').value || 'Não informada';
+        const sentidoR19 = document.getElementById('campo-sentido-r19').value || 'Não informado';
+
+        addText(`Data: ${data} | Horário: ${hora}`);
+        addText(`Local: BR ${rodovia}, KM ${km} - Município: ${cidade}`);
+        addText(`Municípios Sentido Crescente: ${cidadeCrescente} | Decrescente: ${cidadeDecrescente}`);
+        addText(`Sinalização Horizontal: ${sinalizacao}`);
+        if (velR19 !== 'Não informada' || kmR19 !== 'Não informada') {
+            addText(`Placa R19: ${velR19} km/h no KM ${kmR19} (Sentido: ${sentidoR19})`);
+        }
+        addText(`Coordenadas GPS: Latitude ${latAtual}, Longitude ${lngAtual}`);
+        y += 2;
+
+        if (document.getElementById('chk-possui-requerimento').checked) {
+            addText("Requerimentos:", 10, true);
+            document.querySelectorAll('.bloco-requerimento').forEach((b, idx) => {
+                const tipoReq = b.querySelector('.campo-tipo-requerimento')?.value || 'Não especificado';
+                addText(`- Requerimento ${idx + 1}: ${tipoReq}`);
+            });
+            y += 2;
+        }
+
+        const participacoes = document.querySelectorAll('.bloco-participacao');
+        if (participacoes.length > 0) {
+            addText("Participação Externa:", 10, true);
+            participacoes.forEach((b) => {
+                const tipoPart = b.querySelector('.campo-tipo-participacao')?.value || '';
+                const obsPart = b.querySelector('.campo-obs-participacao')?.value || '';
+                if (tipoPart) {
+                    addText(`- ${tipoPart} ${obsPart ? `(${obsPart})` : ''}`);
+                }
+            });
+            y += 4;
+        }
+
+        // 2. VEÍCULOS
+        addText("2. VEÍCULOS", 12, true, [2, 132, 199]);
+        const veiculos = document.querySelectorAll('.bloco-veiculo');
+        if (veiculos.length === 0) {
+            addText("Nenhum veículo cadastrado.");
+        } else {
+            veiculos.forEach((v, vIdx) => {
+                const vNum = vIdx + 1;
+                const tipoVeic = v.querySelector('.campo-tipo-veiculo')?.value || 'Não informado';
+                const modeloVeic = v.querySelector('.campo-modelo-veiculo')?.value || 'Não informado';
+                const velVeic = v.querySelector('.campo-velocidade-veiculo')?.value || 'Não informada';
+                const encVeic = v.querySelector('.campo-encaminhamento-veiculo')?.value || 'Não informado';
+
+                addText(`Veículo ${vNum}: ${tipoVeic} - ${modeloVeic}`, 10, true);
+                addText(`- Velocidade Regulamentar: ${velVeic}`);
+                addText(`- Encaminhamento: ${encVeic}`);
+
+                const chkNF = v.querySelector('.chk-nota-fiscal');
+                if (chkNF && chkNF.checked) {
+                    const nfNum = v.querySelector('.campo-nf-numero')?.value || '';
+                    const nfData = v.querySelector('.campo-nf-data')?.value || '';
+                    const nfOrigem = v.querySelector('.campo-nf-origem')?.value || '';
+                    const nfDestino = v.querySelector('.campo-nf-destino')?.value || '';
+                    const nfCarga = v.querySelector('.campo-nf-carga')?.value || '';
+                    addText(`- Nota Fiscal: Nº ${nfNum}, Data: ${nfData}, Origem: ${nfOrigem}, Destino: ${nfDestino}, Carga: ${nfCarga}`);
+                }
+
+                const atrelados = v.querySelectorAll('.bloco-atrelado-item');
+                atrelados.forEach((atr, atrIdx) => {
+                    const tipoAtr = atr.querySelector('.campo-tipo-atrelado')?.value || '';
+                    const modeloAtr = atr.querySelector('.campo-modelo-atrelado')?.value || '';
+                    addText(`  > Atrelado ${atrIdx + 1}: ${tipoAtr} - ${modeloAtr}`);
+                });
+
+                const pessoas = v.querySelectorAll('.item-pessoa-veiculo');
+                pessoas.forEach((p, pIdx) => {
+                    const nomeP = p.querySelector('.campo-nome-pessoa')?.value || 'Não identificado';
+                    const papelP = p.querySelector('.campo-papel-pessoa')?.value || 'Envolvido';
+                    const obLoc = p.querySelector('.chk-morte')?.checked ? 'Morreu no local' : '';
+                    const lesao = p.querySelector('.chk-lesao')?.checked ? 'Houve lesão' : '';
+                    const dec = p.querySelector('.chk-declaracao')?.checked ? 'Termo de declaração preenchido' : '';
+                    const alc = p.querySelector('.chk-alcoolemia')?.checked ? 'Realizou teste de alcoolemia' : '';
+                    addText(`  > Pessoa ${pIdx + 1}: ${nomeP} (${papelP}) ${obLoc ? `- ${obLoc}` : ''} ${lesao ? `- ${lesao}` : ''} ${dec ? `- ${dec}` : ''} ${alc ? `- ${alc}` : ''}`);
+                });
+                y += 2;
+            });
+        }
+        y += 4;
+
+        // 3. NARRATIVA E DINÂMICA
+        addText("3. NARRATIVA E DINÂMICA", 12, true, [2, 132, 199]);
+        const preservacao = document.getElementById('campo-preservacao-local')?.value || 'Não informada';
+        const tipoSinistro = document.getElementById('campo-tipo-sinistro')?.value || 'Não informado';
+        const obitoNarrativa = document.getElementById('chk-obito-local-narrativa')?.checked ? 'Sim' : 'Não';
+
+        addText(`Tipo do Sinistro: ${tipoSinistro}`);
+        addText(`Preservação do Local: ${preservacao}`);
+        addText(`Óbito no Local: ${obitoNarrativa}`);
+
+        const amarracaoLinhas = document.querySelectorAll('#corpo-tabela-amarracao-narrativa tr');
+        if (amarracaoLinhas.length > 0) {
+            addText("Vestígios (Amarração):", 10, true);
+            amarracaoLinhas.forEach(tr => {
+                const vest = tr.querySelector('.campo-nome-vestigio')?.value || '';
+                const x = tr.querySelector('.campo-coord-x')?.value || '';
+                const yCoord = tr.querySelector('.campo-coord-y')?.value || '';
+                if (vest) {
+                    addText(`- ${vest}: X=${x}, Y=${yCoord}`);
+                }
+            });
+        }
+
+        const textoNarrativaCompleto = document.getElementById('campo-narrativa')?.value || '';
+        if (textoNarrativaCompleto) {
+            y += 2;
+            addText("Texto da Narrativa / Relatório:", 10, true);
+            addText(textoNarrativaCompleto);
+        }
+
+        doc.save(`relatorio-crash-${data.replace(/\//g, '-')}.pdf`);
     }
   </script>
 </body>
